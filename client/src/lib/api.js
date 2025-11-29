@@ -9,9 +9,10 @@
  * - If you change backend URL or add auth headers later, you only change here.
  */
 
-// Use Vite environment variable if provided, otherwise default to local.
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+// Hardcode the backend URL for now to guarantee production reliability.
+const API_BASE_URL = 'https://super-lectures-api.onrender.com/api';
+
+console.log('🔍 API_BASE_URL at runtime:', API_BASE_URL);
 
 /**
  * fetchKnowledgeProblems
@@ -32,10 +33,9 @@ export async function fetchKnowledgeProblems(concept, audience = 'higher-ed') {
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(
-      `Failed to fetch curiosity questions. Status: ${response.status}. Body: ${text}`
-    );
+    const text = await response.text().catch(() => '');
+    console.error('Knowledge problems API failed', response.status, text);
+    throw new Error('Failed to generate curiosity questions');
   }
 
   const data = await response.json();
@@ -47,23 +47,48 @@ export async function fetchKnowledgeProblems(concept, audience = 'higher-ed') {
  * ----------------
  * Calls: POST /api/session-plan
  *
- * @param {string} concept
- * @param {string} knowledgeProblem
- * @param {string} audience
+ * @param {string|object} conceptOrPayload - Concept string or payload object.
+ * @param {string} [chosenQuestion]         - Optional knowledge problem string.
+ * @param {string} [audience]               - Optional audience override.
  * @returns {Promise<string>}  planText
  */
-export async function fetchSessionPlan({ concept, chosenQuestion, audience = 'higher-ed' }) {
+export async function fetchSessionPlan(conceptOrPayload, chosenQuestion, audience = 'higher-ed') {
+  let concept;
+  let chosenQuestionValue;
+  let audienceValue = audience;
+
+  // Flexible input handling
+  if (typeof conceptOrPayload === 'object' && conceptOrPayload !== null) {
+    concept = conceptOrPayload.concept;
+    chosenQuestionValue = conceptOrPayload.chosenQuestion;
+    if (conceptOrPayload.audience) {
+      audienceValue = conceptOrPayload.audience;
+    }
+  } else {
+    concept = conceptOrPayload;
+    chosenQuestionValue = chosenQuestion;
+  }
+
+  // IMPORTANT:
+  // Backend expects { concept, knowledgeProblem }
+  const payload = {
+    concept,
+    knowledgeProblem: chosenQuestionValue,  // 👈 FIXED HERE
+    audience: audienceValue
+  };
+
   const response = await fetch(`${API_BASE_URL}/session-plan`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ concept, knowledgeProblem: chosenQuestion, audience })
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Failed to fetch session plan. Status: ${response.status}. Body: ${text}`);
+    const text = await response.text().catch(() => '');
+    console.error('Session plan API failed', response.status, text);
+    throw new Error('Failed to generate session plan');
   }
 
   const data = await response.json();
