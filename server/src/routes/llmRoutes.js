@@ -36,18 +36,21 @@ router.get('/health', (req, res) => {
  *   }
  */
 router.post('/knowledge-problems', async (req, res) => {
+  const { concept, audience } = req.body || {};
+
+  if (!concept || typeof concept !== 'string' || !concept.trim()) {
+    return res.status(400).json({ error: 'Missing or invalid "concept" in request body.' });
+  }
+
   try {
-    const { concept, audience } = req.body;
+    const problems = await generateKnowledgeProblems({
+      concept: concept.trim(),
+      audience
+    });
 
-    if (!concept || typeof concept !== 'string' || !concept.trim()) {
-      return res.status(400).json({ error: 'Missing or invalid "concept" in request body.' });
-    }
-
-    const problems = await generateKnowledgeProblems({ concept: concept.trim(), audience });
-
-    return res.json({ problems });
+    return res.status(200).json({ problems });
   } catch (err) {
-    console.error('[ERROR] /api/knowledge-problems:', err);
+    console.error('Error in /knowledge-problems', err);
     return res.status(500).json({ error: 'Failed to generate knowledge problems.' });
   }
 });
@@ -58,7 +61,7 @@ router.post('/knowledge-problems', async (req, res) => {
  * Request body:
  *   {
  *     "concept": "Regression",
- *     "knowledgeProblem": "How can we predict outcomes when multiple factors interact?",
+ *     "chosenQuestion": "How can we predict outcomes when multiple factors interact?",
  *     "audience": "MBA students"  // (optional)
  *   }
  *
@@ -68,24 +71,27 @@ router.post('/knowledge-problems', async (req, res) => {
  *   }
  */
 router.post('/session-plan', async (req, res) => {
+  const { concept, chosenQuestion, audience } = req.body || {};
+
+  if (
+    !concept ||
+    typeof concept !== 'string' ||
+    !chosenQuestion ||
+    typeof chosenQuestion !== 'string'
+  ) {
+    return res.status(400).json({ error: 'Missing or invalid "concept" or "chosenQuestion".' });
+  }
+
   try {
-    const { concept, knowledgeProblem, audience } = req.body;
-
-    if (!concept || !knowledgeProblem) {
-      return res
-        .status(400)
-        .json({ error: 'Missing "concept" or "knowledgeProblem" in request body.' });
-    }
-
     const planText = await generateSessionPlan({
       concept: concept.trim(),
-      knowledgeProblem: knowledgeProblem.trim(),
+      knowledgeProblem: chosenQuestion.trim(),
       audience
     });
 
-    return res.json({ planText });
+    return res.status(200).json({ planText });
   } catch (err) {
-    console.error('[ERROR] /api/session-plan:', err);
+    console.error('Error in /session-plan', err);
     return res.status(500).json({ error: 'Failed to generate session plan.' });
   }
 });

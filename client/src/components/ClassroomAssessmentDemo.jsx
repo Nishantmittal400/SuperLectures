@@ -10,7 +10,7 @@
 
 import React from 'react';
 
-function ClassroomAssessmentDemo() {
+function ClassroomAssessmentDemo({ onBackToMain }) {
   const summary = {
     title: 'Sample Class: Understanding Linear Relationships',
     duration: '42 minutes',
@@ -178,6 +178,24 @@ function ClassroomAssessmentDemo() {
           The numbers and labels below are examples only, designed to make the process visible
           without using real classroom audio.
         </p>
+        {onBackToMain && (
+          <button
+            type="button"
+            className="glass-button"
+            style={{
+              marginTop: '0.75rem',
+              padding: '0.45rem 1rem',
+              borderRadius: '999px',
+              border: '1px solid rgba(255, 255, 255, 0.65)',
+              background: 'transparent',
+              color: 'inherit',
+              cursor: 'pointer'
+            }}
+            onClick={onBackToMain}
+          >
+            ← Back to main page
+          </button>
+        )}
       </section>
 
       <section className="glass-card" style={{ marginBottom: '1rem' }}>

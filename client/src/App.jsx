@@ -51,6 +51,11 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleBackToMain = () => {
+    setShowAssessmentDemo(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
@@ -125,7 +130,7 @@ function App() {
   return (
     <Layout>
       {showAssessmentDemo ? (
-        <ClassroomAssessmentDemo />
+        <ClassroomAssessmentDemo onBackToMain={handleBackToMain} />
       ) : (
         <>
           <HeroSection
