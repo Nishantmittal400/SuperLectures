@@ -16,10 +16,13 @@ function HeroSection({ onTryNow, onAssessClassroom }) {
   return (
     <section style={{ paddingTop: '2rem', paddingBottom: '1.5rem' }}>
       <div style={{ marginBottom: '1.5rem' }}>
-        <img src={Logo} alt="Super Lectures logo" style={{ height: '60px', marginBottom: '0.8rem' }} />
-        <div className="brand-badge">
-          Super Lectures <span className="brand-tagline">— Classroom thinking redesigned.</span>
-        </div>
+        <img
+          src={Logo}
+          alt="Super Lectures logo"
+          className="hero-logo"
+          style={{ marginBottom: '0.8rem' }}
+        />
+        <div className="brand-badge">Super Lectures</div>
         <h1
           style={{
             fontSize: '2.35rem',

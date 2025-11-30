@@ -25,6 +25,7 @@ import ClassroomAssessmentDemo from './components/ClassroomAssessmentDemo';
 import ConceptForm from './components/ConceptForm';
 import KnowledgeProblemsList from './components/KnowledgeProblemsList';
 import SessionPlanView from './components/SessionPlanView';
+import SessionFlowInfographic from './components/SessionFlowInfographic';
 import { fetchKnowledgeProblems, fetchSessionPlan } from './lib/api';
 
 function App() {
@@ -37,6 +38,8 @@ function App() {
   const [knowledgeProblems, setKnowledgeProblems] = useState([]);
   const [selectedKPIndex, setSelectedKPIndex] = useState(null);
   const [sessionPlanText, setSessionPlanText] = useState('');
+  const [customCuriosityQuestion, setCustomCuriosityQuestion] = useState('');
+  const [activeCuriosityQuestionForPlan, setActiveCuriosityQuestionForPlan] = useState('');
 
   // UI flags
   const [loadingKP, setLoadingKP] = useState(false);
@@ -97,17 +100,38 @@ function App() {
     setSessionPlanText(''); // Clear old plan so user understands they need to regenerate
   };
 
+  const selectedKnowledgeProblem =
+    selectedKPIndex !== null ? knowledgeProblems[selectedKPIndex] : '';
+
   const handleGenerateSessionPlan = async () => {
-    if (selectedKPIndex === null || !knowledgeProblems[selectedKPIndex]) return;
+    if (!concept.trim()) {
+      alert('Please enter a concept first.');
+      return;
+    }
+
+    const trimmedCustomQuestion = customCuriosityQuestion.trim();
+    const hasCustomQuestion = trimmedCustomQuestion.length > 0;
+    const hasSelectedQuestion = Boolean(selectedKnowledgeProblem?.trim());
+
+    if (!hasCustomQuestion && !hasSelectedQuestion) {
+      alert('Pick a curiosity question or type your own.');
+      return;
+    }
+
+    const effectiveQuestion = hasCustomQuestion ? trimmedCustomQuestion : selectedKnowledgeProblem;
 
     setErrorMessage('');
     setLoadingPlan(true);
     setSessionPlanText('');
+    setActiveCuriosityQuestionForPlan(effectiveQuestion);
 
     try {
-      const kp = knowledgeProblems[selectedKPIndex];
       const audienceToUse = audience.trim() || 'higher-ed';
-      const planText = await fetchSessionPlan(concept.trim(), kp, audienceToUse);
+      const planText = await fetchSessionPlan({
+        concept: concept.trim(),
+        chosenQuestion: effectiveQuestion,
+        audience: audienceToUse
+      });
       setSessionPlanText(planText);
     } catch (err) {
       console.error(err);
@@ -120,9 +144,6 @@ function App() {
   const handleRegeneratePlan = async () => {
     await handleGenerateSessionPlan();
   };
-
-  const selectedKnowledgeProblem =
-    selectedKPIndex !== null ? knowledgeProblems[selectedKPIndex] : '';
 
   // ---------------------------------------------------------------------------
   // Render
@@ -138,6 +159,7 @@ function App() {
             onAssessClassroom={handleShowAssessmentDemo}
           />
           <FrameworkExplainer />
+          <SessionFlowInfographic />
 
           <div ref={featureBlockRef}>
             <ConceptForm
@@ -162,11 +184,13 @@ function App() {
               onSelect={handleSelectKP}
               onGeneratePlan={handleGenerateSessionPlan}
               loadingPlan={loadingPlan}
+              customCuriosityQuestion={customCuriosityQuestion}
+              onCustomCuriosityQuestionChange={setCustomCuriosityQuestion}
             />
 
             <SessionPlanView
               concept={concept}
-              knowledgeProblem={selectedKnowledgeProblem}
+              knowledgeProblem={activeCuriosityQuestionForPlan}
               planText={sessionPlanText}
               onRegenerate={handleRegeneratePlan}
               loading={loadingPlan}
